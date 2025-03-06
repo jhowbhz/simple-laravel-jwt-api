@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUsersRequest;
+use App\Http\Requests\UpdateUsersRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
 
 class UsersController extends Controller
 {
@@ -19,18 +20,12 @@ class UsersController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUsersRequest $request)
     {
         try {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'username' => $request->username,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-            ]);
 
-            return response()->json($user);
+            return response()->json($request->validated());
+
         } catch (\Exception $e) {
             return response()->json(['message' => 'User not created'], 500);
         }
@@ -42,8 +37,10 @@ class UsersController extends Controller
     public function show(string $id)
     {
         try {
+
             $user = User::findOrFail($id);
             return response()->json($user);
+
         } catch (\Exception $e) {
             return response()->json(['message' => 'User not found'], 404);
         }
@@ -52,20 +49,16 @@ class UsersController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateUsersRequest $request, string $id)
     {
         try {
+
             $user = User::findOrFail($id);
-            $user->update([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'username' => $request->username,
-                'password' => bcrypt($request->password),
-            ]);
+            $user->update($request->validated());
 
             return response()->json($user);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
@@ -75,8 +68,10 @@ class UsersController extends Controller
     public function destroy(string $id)
     {
         try {
+
             $user = User::findOrFail($id);
             $user->delete();
+
             return response()->json(['message' => 'User deleted']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'User not found'], 404);
